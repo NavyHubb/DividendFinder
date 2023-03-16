@@ -21,7 +21,10 @@ public class CompanyController {
 
     @GetMapping("/autocomplete")
     public ResponseEntity<?> autocomplete(@PathVariable String keyword) {
-        return null;
+//        var result = companyService.autocomplete(keyword);  // Trie를 이용한 구현
+        var result = companyService.getCompanyNamesByKeyword(keyword);  // SQL의 LIKE를 이용한 구현
+
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping
@@ -43,6 +46,7 @@ public class CompanyController {
         }
 
         Company company = companyService.save(ticker);
+        companyService.addAutocompleteKeyword(company.getName());  // 자동완성에서 검색될 수 있도록 trie에도 함께 저장
 
         return ResponseEntity.ok(company);
     }

@@ -9,7 +9,9 @@ import green.dividendfinder.persist.repository.CompanyRepository;
 import green.dividendfinder.persist.repository.DividendRepository;
 import green.dividendfinder.scraper.Scraper;
 import lombok.AllArgsConstructor;
+import org.apache.commons.collections4.Trie;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class CompanyService {
 
+    private final Trie trie;
     private final Scraper yahooFinanceScraper;
 
     private final CompanyRepository companyRepository;
@@ -59,6 +62,31 @@ public class CompanyService {
         this.dividendRepository.saveAll(dividendEntities);
 
         return company;
+    }
+
+    public void addAutocompleteKeyword(String keyword) {
+        this.trie.put(keyword, null);  // 자동완성 기능에 key만 사용될 뿐, value는 사용되지 않으므로 null로 처리
+    }
+
+    public List<String> getCompanyNamesByKeyword(String keyword) {
+        Pageable limit = PageRequest.of(0, 10);
+        Page<CompanyEntity> companyEntities = companyRepository.findByNameStartingWithIgnoreCase(keyword, limit);
+
+        return companyEntities.stream()
+                        .map(e -> e.getName())
+                        .collect(Collectors.toList());
+    }
+
+    /**
+     * keyword를 prefix로 갖는 단어들의 목록을 반환
+     */
+    public List<String> autocomplete(String keyword) {
+        return (List<String>) this.trie.prefixMap(keyword).keySet()
+                .stream().collect(Collectors.toList());
+    }
+
+    public void deleteAutocompleteKeyword(String keyword) {
+        this.trie.remove(keyword);
     }
 
 }
