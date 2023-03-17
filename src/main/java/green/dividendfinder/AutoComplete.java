@@ -11,7 +11,7 @@ public class AutoComplete {
     }
 
     public Object get(String s) {
-        this.trie.get(s);
+        return this.trie.get(s);
     }
 
 }
