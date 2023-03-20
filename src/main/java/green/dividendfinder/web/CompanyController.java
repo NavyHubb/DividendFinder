@@ -1,12 +1,15 @@
 package green.dividendfinder.web;
 
 import green.dividendfinder.model.Company;
+import green.dividendfinder.model.constants.CacheKey;
 import green.dividendfinder.persist.entity.CompanyEntity;
 import green.dividendfinder.service.CompanyService;
 import lombok.AllArgsConstructor;
+import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +21,7 @@ import java.util.List;
 public class CompanyController {
 
     private final CompanyService companyService;
+    private final CacheManager redisCacheManager;
 
     @GetMapping("/autocomplete")
     public ResponseEntity<?> autocomplete(@RequestParam String keyword) {
@@ -28,6 +32,7 @@ public class CompanyController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('READ', 'WRITE')")
     public ResponseEntity<?> searchCompany(final Pageable pageable) {
         Page<CompanyEntity> companies = companyService.getAllCompany(pageable);  // 다 가져올 필요가 없지? 페이저블 가보자
 
@@ -38,6 +43,7 @@ public class CompanyController {
      * 회사 및 배당금 정보 추가
      */
     @PostMapping
+    @PreAuthorize("hasRole('WRITE')")  // 관리 권한을 가진 사용자만 이 API를 호출할 수 있도록
     public ResponseEntity<?> addCompany(@RequestBody Company request) {
         String ticker = request.getTicker().trim();
 
@@ -51,9 +57,18 @@ public class CompanyController {
         return ResponseEntity.ok(company);
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> deleteCompany() {
-        return null;
+    @DeleteMapping("/{ticker}")
+    @PreAuthorize("hasRole('WRITE')")  // 관리 권한을 가진 사용자만 이 API를 호출할 수 있도록
+    public ResponseEntity<?> deleteCompany(@PathVariable String ticker) {
+        String companyName = companyService.deleteCompany(ticker);
+
+        // 캐시에서도 지워줘야지
+        clearFinanceCache(companyName);
+
+        return ResponseEntity.ok(companyName);
     }
 
+    public void clearFinanceCache(String companyName) {
+        redisCacheManager.getCache(CacheKey.KEY_FINANCE).evict(companyName);
+    }
 }

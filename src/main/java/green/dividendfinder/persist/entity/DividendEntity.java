@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 
 @Entity(name = "DIVIDEND")
 @Getter
-@ToString
 @NoArgsConstructor
 @Table(  // 복합 유니크 키 설정
         uniqueConstraints = {

@@ -1,5 +1,6 @@
 package green.dividendfinder.service;
 
+import green.dividendfinder.exception.impl.NoCompanyException;
 import green.dividendfinder.model.Company;
 import green.dividendfinder.model.Dividend;
 import green.dividendfinder.model.ScrapedResult;
@@ -89,4 +90,19 @@ public class CompanyService {
         this.trie.remove(keyword);
     }
 
+    public String deleteCompany(String ticker) {
+        CompanyEntity company = companyRepository.findByTicker(ticker)
+                .orElseThrow(() -> new NoCompanyException());
+
+        // 찾은 회사에 해당하는 배당금 정보도 함께 삭제
+        dividendRepository.deleteAllByCompanyId(company.getId());
+
+        // 회사 정보 삭제
+        companyRepository.delete(company);
+
+        // 트라이에 있는 회사명 삭제
+        deleteAutocompleteKeyword(company.getName());
+
+        return company.getName();
+    }
 }

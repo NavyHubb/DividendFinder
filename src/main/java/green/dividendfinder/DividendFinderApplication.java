@@ -27,7 +27,6 @@ public class DividendFinderApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(DividendFinderApplication.class, args);
-
     }
 
 }
