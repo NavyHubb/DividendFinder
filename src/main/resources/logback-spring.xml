@@ -1,0 +1,45 @@
+<configuration>
+    <property name="LOG_DIR" value="./"/>
+    <property name="LOG_FILE_NAME" value="mylog"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- 출력 패턴 설정 -->
+            <pattern> %d{yyyy-MM-dd HH:mm:ss} %highlight(%-5level) %magenta(%-4relative) --- [ %thread{10} ]  %cyan(%logger{20}) : %msg%n </pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 파일명과 경로 설정 -->
+        <file>${LOG_DIR}/${LOG_FILE_NAME}</file>
+        <!-- 출력 패턴 설정 -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}:%-3relative][%thread] %-5level %logger{35} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+        <!-- Rolling 정책 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- .gz, .zip 등을 넣으면 자동 일자별 로그파일 압축. 날짜가 바뀌면 새로운 파일 씀-->
+            <fileNamePattern>${LOGS_PATH}/%d{yyyy-MM-dd}_%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- 파일당 최고 용량. 지정한 크기를 넘으면 이 파일은 롤링되면서 새로운 파일을 다시 씀 -->
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <!-- 일자별 로그파일 최대 보관주기(일), 해당 설정일 이상된 파일은 자동 제거 -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- info level 이상은 다 찍겠다는 의미. 즉 debug 빼고 찍겠다 -->
+    <logger name="org.springframework" level="info"/>
+    <logger name="org.hibernate" level="info"/>
+
+    <!-- 프로젝트의 root로부터는  -->
+    <root level="info">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+
+</configuration>

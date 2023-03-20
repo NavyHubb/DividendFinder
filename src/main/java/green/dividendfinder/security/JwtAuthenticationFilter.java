@@ -33,10 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {  // 로그�
         // request의 header로부터 token 가져오기
         String token = this.resolveTokenFromRequest(request);
 
-        if (StringUtils.hasText(token) && this.tokenProvider.validateToken(token)) {  // 토큰이 유효한 경우. 유효기간이 남았다는 의미.
-            // 인증은 추가적으로 더 필요한 상황
+        if (StringUtils.hasText(token) && this.tokenProvider.validateToken(token)) {  // 일단 유효기간은 남았음. 인증은 추가적으로 더 필요한 상황
             Authentication auth = this.tokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(auth);  // Context에 인증정보 넣어준다
+
+            // 어떤 사용자가 어떤 경로에 접근했는지 기록
+            log.info(String.format("[%s] -> %s", this.tokenProvider.getUsername(token), request.getRequestURI()));
         }
 
         filterChain.doFilter(request, response);  // filter가 연속적으로 실행될 수 있도록

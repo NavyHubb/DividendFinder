@@ -5,6 +5,7 @@ import green.dividendfinder.model.constants.CacheKey;
 import green.dividendfinder.persist.entity.CompanyEntity;
 import green.dividendfinder.service.CompanyService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/company")
 @AllArgsConstructor
@@ -54,6 +56,8 @@ public class CompanyController {
         Company company = companyService.save(ticker);
         companyService.addAutocompleteKeyword(company.getName());  // 자동완성에서 검색될 수 있도록 trie에도 함께 저장
 
+        log.info("company inserted -> " + company.getName());
+
         return ResponseEntity.ok(company);
     }
 
@@ -64,6 +68,8 @@ public class CompanyController {
 
         // 캐시에서도 지워줘야지
         clearFinanceCache(companyName);
+
+        log.info("company delted -> " + companyName);
 
         return ResponseEntity.ok(companyName);
     }
